@@ -50,6 +50,7 @@ jobs:
       - name: Build app (no code signing)
         run: |
           set -o pipefail
+          mkdir -p build
           xcodebuild \
             -project AlphaSync.xcodeproj \
             -scheme AlphaSync \
