@@ -77,7 +77,8 @@ final class TCPStream: InputStreamLike {
     }
 
     private static func resolveIPv4(_ host: String) -> in_addr? {
-        if let a = inet_addr(host), a != INADDR_NONE {
+        let a = inet_addr(host)
+        if a != INADDR_NONE {
             return in_addr(s_addr: a)
         }
         var hints = addrinfo(
@@ -97,7 +98,7 @@ final class TCPStream: InputStreamLike {
 
     func setReceiveTimeout(_ ms: Int) {
         guard fd >= 0 else { return }
-        var tv = timeval(tv_sec: ms / 1000, tv_usec: (ms % 1000) * 1000)
+        var tv = timeval(tv_sec: ms / 1000, tv_usec: Int32((ms % 1000) * 1000))
         setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
     }
 
@@ -133,7 +134,7 @@ final class TCPStream: InputStreamLike {
         var off = 0
         while off < data.count {
             let n = data.withUnsafeBytes { ptr -> Int in
-                write(fd, ptr.baseAddress!.advanced(by: off), data.count - off)
+                unistd.write(fd, ptr.baseAddress!.advanced(by: off), data.count - off)
             }
             if n < 0 {
                 let e = errno
@@ -178,7 +179,7 @@ final class TCPStream: InputStreamLike {
         let s = fd
         fd = -1
         sendLock.unlock()
-        if s >= 0 { closeRaw(s) }
+        if s >= 0 { Self.closeRaw(s) }
     }
 
     private static func closeRaw(_ s: Int32) {
