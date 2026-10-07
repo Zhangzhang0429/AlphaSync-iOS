@@ -159,7 +159,7 @@ enum PtpCodec {
     static func read(_ input: InputStreamLike) throws -> Msg? {
         guard let h = try input.readFully(headerLen) else { return nil }
         let len = i32(h, 0)
-        let type = UInt32(bitPattern: UInt32(i32(h, 4)))
+        let type = UInt32(i32(h, 4))
         if len < headerLen || len > maxPacket {
             throw PtpError.badFrame("坏包长度: \(len) (type=0x\(String(format: "%04X", type)))")
         }
@@ -270,7 +270,7 @@ enum PtpCodec {
     static func parseOp(_ body: [UInt8]) throws -> Op {
         if body.count < 10 { throw PtpError.badFrame("操作包过短: \(body.count)") }
         var o = Op()
-        o.dataPhase = UInt32(bitPattern: UInt32(i32(body, 0)))
+        o.dataPhase = UInt32(i32(body, 0))
         o.code = UInt32(u16(body, 4))
         o.txId = i32(body, 6)
         let n = (body.count - 10) / 4
@@ -319,7 +319,7 @@ enum PtpCodec {
     static func parseOpBlob(_ body: [UInt8]) throws -> OpBlob {
         if body.count < 18 { throw PtpError.badFrame("扩展响应包过短: \(body.count)") }
         var o = OpBlob()
-        o.dataPhase = UInt32(bitPattern: UInt32(i32(body, 0)))
+        o.dataPhase = UInt32(i32(body, 0))
         o.code = UInt32(u16(body, 4))
         o.txId = i32(body, 6)
         let n = i32(body, 10)
