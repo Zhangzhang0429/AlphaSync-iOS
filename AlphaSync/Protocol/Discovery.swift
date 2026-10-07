@@ -240,12 +240,12 @@ enum Discovery {
 }
 
 /// 内存字节流，用于解析探测包等已收齐的字节。
-private struct StreamBytes: InputStreamLike {
+private final class StreamBytes: InputStreamLike {
     let data: [UInt8]
     var offset = 0
     init(_ data: [UInt8]) { self.data = data }
 
-    mutating func readFully(_ count: Int) throws -> [UInt8]? {
+    func readFully(_ count: Int) throws -> [UInt8]? {
         if offset + count > data.count {
             throw PtpError.badFrame("流截断")
         }
