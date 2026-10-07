@@ -109,7 +109,7 @@ struct TransferRow: View {
                 Button {
                     store.retryFailed(forCamera: cameraGuid)
                 } label: {
-                    Image(systemName: "arrow.clockwise.circle.fill").foregroundStyle(.accentColor)
+                    Image(systemName: "arrow.clockwise.circle.fill").foregroundStyle(Color.accentColor)
                 }
                 .buttonStyle(.borderless)
             case .queued:
