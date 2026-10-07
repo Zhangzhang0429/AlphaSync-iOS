@@ -122,7 +122,7 @@ enum PtpCodec {
     }
 
     static func put32u(_ b: inout [UInt8], _ off: Int, _ v: UInt32) {
-        put32(&b, off, Int(bitPattern: v))
+        put32(&b, off, Int(v))
     }
 
     static func put64(_ b: inout [UInt8], _ off: Int, _ v: Int64) {
