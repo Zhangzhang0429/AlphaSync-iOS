@@ -1,0 +1,53 @@
+# AlphaSync iOS —— XcodeGen 工程描述
+# 用法：在装有 XcodeGen 的 macOS 上执行 `xcodegen generate` 生成 AlphaSync.xcodeproj
+# GitHub Actions 工作流会自动完成此步骤，Windows 用户无需本地安装任何东西。
+name: AlphaSync
+options:
+  bundleIdPrefix: io.github.bi2qfa
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  xcodeVersion: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"          # 仅 iPhone
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+targets:
+  AlphaSync:
+    type: application
+    platform: iOS
+    sources:
+      - path: AlphaSync
+    info:
+      path: AlphaSync/Info.plist
+      properties:
+        CFBundleDisplayName: AlphaSync
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
+        # iOS 14+ 本地网络权限：发现/连接相机（PTP/IP over Wi-Fi）必需
+        NSLocalNetworkUsageDescription: AlphaSync 需要访问本地网络，用于发现并连接同一 Wi-Fi/热点下的索尼相机，浏览与传输相机存储卡中的照片和视频。
+        NSBonjourServices: []
+        # 把下载文件放进“文件”App 可见的目录
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        # 保存照片/视频到系统相册
+        NSPhotoLibraryAddUsageDescription: 将照片和视频保存到系统相册时需要此权限。
+        # 边拍边传需要在后台短暂运行（受 iOS 系统调度限制，详见 README）
+        UIBackgroundModes:
+          - fetch
+          - processing
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.bi2qfa.alphasync.ios
+        INFOPLIST_FILE: AlphaSync/Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
+    scheme:
+      testTargets: []
