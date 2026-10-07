@@ -9,8 +9,10 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            Section("本机") {
+            Section {
                 TextField("设备名称", text: $settings.friendlyName)
+            } header: {
+                Text("本机")
             } footer: {
                 Text("相机端会显示这个名字（超过 16 字自动截断）")
             }
@@ -41,8 +43,10 @@ struct SettingsView: View {
                 }
             }
 
-            Section("下载") {
+            Section {
                 Toggle("同时保存到系统相册", isOn: $settings.saveToPhotos)
+            } header: {
+                Text("下载")
             } footer: {
                 Text("开启后，jpg/mp4/mov 下载完成会同时保存到「照片」App（RAW 文件只能存文件目录）")
             }
