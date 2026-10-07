@@ -1,0 +1,84 @@
+# AlphaSync iOS 云构建 —— 在 GitHub 免费 macOS 机器上编译出未签名 IPA
+#
+# 用法（小白版，详见教程文档）：
+#   1. 把这个仓库推送到自己的 GitHub（公开仓库即可用免费额度）
+#   2. 打开仓库 Actions 页 → 点本工作流 → Run workflow
+#   3. 跑完后在 Artifacts 下载 AlphaSync-iOS-unsigned.zip
+#   4. 解压得到 AlphaSync-iOS.ipa → 交给爱思助手签名安装
+#
+# 为什么用 GitHub Actions？
+#   编译 iOS 应用需要 macOS + Xcode，Windows 上装不了。
+#   GitHub 给每个公开仓库提供免费的 macOS 云机器（每次约 3 GB 存储 / 60 分钟），
+#   相当于借一台 Mac 帮你把安装包编译出来。
+name: Build iOS (unsigned IPA)
+
+on:
+  workflow_dispatch:        # 仓库页面手动点击运行
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ios-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15        # macOS + Xcode（XcodeGen 走 Homebrew 安装）
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+          xcodegen --version
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build app (no code signing)
+        run: |
+          xcodebuild \
+            -project AlphaSync.xcodeproj \
+            -scheme AlphaSync \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build \
+            -derivedDataPath build/DerivedData \
+            | tee build/xcodebuild.log \
+            | tail -n 20
+
+      - name: Package unsigned IPA
+        run: |
+          APP_PATH="build/DerivedData/Build/Products/Release-iphoneos/AlphaSync.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "❌ 没有找到 AlphaSync.app，见 build/xcodebuild.log"
+            exit 1
+          fi
+          rm -rf build/Payload
+          mkdir -p build/Payload
+          cp -R "$APP_PATH" build/Payload/
+          cd build
+          zip -r ../AlphaSync-iOS.ipa Payload -x "*.DS_Store"
+
+      - name: Verify IPA contents
+        run: |
+          unzip -l AlphaSync-iOS.ipa | head -n 20
+          echo "IPA size: $(du -h AlphaSync-iOS.ipa | cut -f1)"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlphaSync-iOS-unsigned
+          path: |
+            AlphaSync-iOS.ipa
+            build/xcodebuild.log
+          if-no-files-found: error
