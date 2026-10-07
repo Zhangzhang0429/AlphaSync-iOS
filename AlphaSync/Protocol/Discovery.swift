@@ -81,7 +81,7 @@ enum Discovery {
         if s >= 0 {
             var on: Int32 = 1
             setsockopt(s, SOL_SOCKET, SO_BROADCAST, &on, socklen_t(MemoryLayout<Int32>.size))
-            var tv = timeval(tv_sec: recvSliceMs / 1000, tv_usec: (recvSliceMs % 1000) * 1000)
+            var tv = timeval(tv_sec: recvSliceMs / 1000, tv_usec: Int32((recvSliceMs % 1000) * 1000))
             setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
         }
         return s
@@ -119,7 +119,7 @@ enum Discovery {
             var from = sockaddr_in()
             var fromLen = socklen_t(MemoryLayout<sockaddr_in>.size)
             let n = buf.withUnsafeMutableBytes { ptr in
-                withUnsafePointer(to: &from) { fp in
+                withUnsafeMutablePointer(to: &from) { fp in
                     fp.withMemoryRebound(to: sockaddr.self, capacity: 1) { sa in
                         recvfrom(sock, ptr.baseAddress, 1500, 0, sa, &fromLen)
                     }
@@ -199,7 +199,8 @@ enum Discovery {
     }
 
     private static func resolveIPv4(_ host: String) -> in_addr? {
-        if let a = inet_addr(host), a != INADDR_NONE {
+        let a = inet_addr(host)
+        if a != INADDR_NONE {
             return in_addr(s_addr: a)
         }
         var hints = addrinfo(
