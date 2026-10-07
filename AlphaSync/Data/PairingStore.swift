@@ -33,7 +33,7 @@ final class PairingStore {
     func upsert(_ camera: PairedCamera) {
         let key = camera.peerDeviceId.lowercased()
         let existing = find(key)
-        var next = cameras.filter { !$0.peerDeviceId.caseInsensitiveCompare(key).orderedSame }
+        var next = cameras.filter { $0.peerDeviceId.caseInsensitiveCompare(key) != .orderedSame }
         next.append(PairedCamera(
             peerDeviceId: key,
             peerName: camera.peerName,
@@ -51,7 +51,7 @@ final class PairingStore {
     /// 解除配对（手机端主动）。返回是否真的删掉了。
     @discardableResult
     func remove(_ peerDeviceId: String) -> Bool {
-        let next = cameras.filter { !$0.peerDeviceId.caseInsensitiveCompare(peerDeviceId).orderedSame }
+        let next = cameras.filter { $0.peerDeviceId.caseInsensitiveCompare(peerDeviceId) != .orderedSame }
         if next.count == cameras.count { return false }
         commit(next)
         return true
