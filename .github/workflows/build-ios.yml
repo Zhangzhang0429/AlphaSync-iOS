@@ -38,11 +38,18 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
+      - name: Diagnostic (list sources)
+        run: |
+          echo "== Swift 源码数量 =="
+          find AlphaSync -name "*.swift" | wc -l
+          find AlphaSync -name "*.swift" | head -n 40
+
       - name: Show Xcode version
         run: xcodebuild -version
 
       - name: Build app (no code signing)
         run: |
+          set -o pipefail
           xcodebuild \
             -project AlphaSync.xcodeproj \
             -scheme AlphaSync \
@@ -53,14 +60,16 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             build \
             -derivedDataPath build/DerivedData \
-            | tee build/xcodebuild.log \
-            | tail -n 20
+            2>&1 | tee build/xcodebuild.log | tail -n 40
 
       - name: Package unsigned IPA
         run: |
+          set -e
           APP_PATH="build/DerivedData/Build/Products/Release-iphoneos/AlphaSync.app"
-          if [ ! -d "$APP_PATH" ]; then
-            echo "❌ 没有找到 AlphaSync.app，见 build/xcodebuild.log"
+          echo "== 检查编译产物 =="
+          ls -la "$APP_PATH" || true
+          if [ ! -f "$APP_PATH/AlphaSync" ]; then
+            echo "ERROR: 没有找到可执行文件 AlphaSync，编译没有真正成功，请看日志"
             exit 1
           fi
           rm -rf build/Payload
@@ -68,17 +77,21 @@ jobs:
           cp -R "$APP_PATH" build/Payload/
           cd build
           zip -r ../AlphaSync-iOS.ipa Payload -x "*.DS_Store"
-
-      - name: Verify IPA contents
-        run: |
-          unzip -l AlphaSync-iOS.ipa | head -n 20
-          echo "IPA size: $(du -h AlphaSync-iOS.ipa | cut -f1)"
+          cd ..
+          echo "== 安装包内容 =="
+          unzip -l AlphaSync-iOS.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: AlphaSync-iOS-unsigned
-          path: |
-            AlphaSync-iOS.ipa
-            build/xcodebuild.log
+          path: AlphaSync-iOS.ipa
           if-no-files-found: error
+
+      - name: Upload build log (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build/xcodebuild.log
+          if-no-files-found: warn
