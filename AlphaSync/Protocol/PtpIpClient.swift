@@ -137,7 +137,7 @@ final class PtpIpClient {
             throw PtpError.protocolError("相机在握手前关闭连接")
         }
         if first.type == PtpCodec.tInitFail {
-            let reason = first.body.count >= 4 ? UInt32(bitPattern: UInt32(PtpCodec.i32(first.body, 0))) : 0xFFFFFFFF
+            let reason = first.body.count >= 4 ? UInt32(PtpCodec.i32(first.body, 0)) : 0xFFFFFFFF
             link.closeQuietly()
             throw PtpError.initFailed(reason: reason)
         }
