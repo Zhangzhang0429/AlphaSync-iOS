@@ -50,7 +50,7 @@ final class TCPStream: InputStreamLike {
         fcntl(s, F_SETFL, flags | O_NONBLOCK)
         let rc = withUnsafePointer(to: &addr) { ptr -> Int32 in
             ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sa -> Int32 in
-                connect(s, sa, socklen_t(MemoryLayout<sockaddr_in>.size))
+                Darwin.connect(s, sa, socklen_t(MemoryLayout<sockaddr_in>.size))
             }
         }
         if rc < 0 && errno == EINPROGRESS {
